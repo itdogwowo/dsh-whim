@@ -1,0 +1,14 @@
+{
+  "name": "dsh-whim",
+  "description": "念頭：側欄入口的一次性臨時調查。一個念頭一個獨立對話，查完留下一頁結論。",
+  "version": "0.2.1",
+  "entry": {
+    "name": "dsh-whim",
+    "inject": [
+      "webServer"
+    ]
+  },
+  "client": {
+    "platform": "web"
+  }
+}

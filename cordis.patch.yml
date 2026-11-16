@@ -1,0 +1,12 @@
+# dsh-whim bundle patch
+#
+# 插入宿主半：一條 /api/dsh-whim/rpc 路由，加減念頭的資料夾。
+#
+# 只依賴 webServer 一個服務：其他服務（remote.session、workspaces）一律由瀏覽器半
+# 在真的要用那一刻用 ctx.get() 取得，不在啟動時跟核心服務打交道。
+# 瀏覽器半不需要自己一列：client-modules 會透過 package.json 的 dsh.client 找到它。
+#
+# 這一列的 name 必須等於套件名稱，否則啟用／停用的覆寫會對不上而被跳過。
+- insert:
+    - id: dsh-whim
+      name: dsh-whim
