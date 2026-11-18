@@ -1,0 +1,9 @@
+# 除錯／探測腳本（本機路徑，不進版控）
+.probe-*.mjs
+.peek.mjs
+.find.mjs
+.head-*.js
+.asar-peek.mjs
+.smoke-home/
+
+node_modules/

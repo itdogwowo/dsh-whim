@@ -69,7 +69,7 @@ DSH 的 session 天生就是隔離單位：自己的 context、自己的 transcr
 | 檔案 | 各自獨立子資料夾 | 軟隔離（共用 cwd，靠 §9 的 agent 規則） |
 | 生命週期 | 各自獨立封存／刪除 | 硬隔離 |
 
-> ⚠️ 為什麼檔案是軟隔離：如果每個念頭都用自己的 cwd，DSH 側欄會長出 N 個「工作區」，一個月後就是災難。所以全部掛在同一個根目錄底下，在側欄只佔一格。
+> ⚠️ 為什麼檔案是軟隔離：如果每個念頭都用自己的 cwd，DSH 側欄會長出 N 個「工作區」，一個月後就是災難。所以全部掛在**同一個根目錄**底下——那個根目錄本身註冊成**一個** workspace，側欄只佔一格，念頭的對話全部收在它裡面。
 
 ## 5. 架構：三個面（跟酒館同構，但小一個量級）
 
@@ -175,12 +175,16 @@ await pumping                                                   // 收完 → �
 
 | op | 作用 | 備註 |
 |---|---|---|
-| `whim.list` | 讀 `index.json` | 分頁／排序交給前端 |
-| `whim.create` | 建資料夾 + `meta.json` + 寫入索引 | 回 `{ id, dir }` |
+| `whim.list` | 讀 `index.json` + 目前設定 | 回 `{ configured, root, workspaceId, source, defaultRoot, defaultHasIndex, items }`；分頁／排序交給前端 |
+| `whim.config` | 只讀目前設定 | 給面板確認「有沒有選過資料夾」 |
+| `whim.setRoot` | 記住使用者選的資料夾（與它的 workspace） | 寫 `config.json`；`whim.setConfig` 是同義詞 |
+| `whim.clearConfig` | 忘掉設定（不動檔案） | |
+| `whim.create` | 建資料夾 + `meta.json` + 寫入索引 | 回 `{ id, root, dir, meta }` |
 | `whim.read` | 讀某筆的 meta / findings / log | |
-| `whim.update` | 改 status、標題、token 數 | |
-| `whim.drop` | 放下：封存 session + 刪資料夾 + 移出索引 | 見 §10 風險 5、6、7 |
-| `whim.promote` | 收好：把 `findings.md` 複製到你指定的目錄 | 不搬 session |
+| `whim.save` | 改 status／sessionId／輪數，並可整份覆寫 `log.md`／`findings.md` | meta 走白名單，`id`／`createdAt` 動不了 |
+| `whim.drop` | 放下：刪資料夾 + 移出索引（**不碰 session**） | 封存 session 由面板另外呼叫 DSH 的 `workspaces.archiveSession()` |
+
+原本規劃的 `whim.update` 併入 `whim.save`；`whim.promote`（收好）留到 M2。
 
 ### 資料落點
 
@@ -242,11 +246,13 @@ session 的 cwd ＝ `<ROOT>`（所有念頭共用 → 側欄只長一格）。
 
 ## 11. 里程碑
 
-### M1 — 能用（目標：一個下午，< 1200 行）
-- [ ] 宿主半：一條 rpc 路由 + `index.json` / 資料夾 I/O（`create` / `list` / `read` / `drop`）
-- [ ] 瀏覽器半：側欄入口 + `main` 頁面（輸入框、清單、選中內容）
-- [ ] 冒一個念頭：建 session → 串流 → 寫 `log.md`
-- [ ] 放下：封存 + 刪資料夾
+### M1 — 能用
+
+- [x] 宿主半：一條 rpc 路由 + `index.json` / 資料夾 I/O（`config` / `list` / `create` / `read` / `save` / `drop`）
+- [x] 瀏覽器半：側欄入口 + `main` 頁面（輸入框、清單、選中內容）
+- [x] 第一次使用時選資料夾；選定的資料夾註冊成**一個** DSH workspace
+- [x] 冒一個念頭：建資料夾 → 建 session（掛在那個 workspace）→ 這一輪留在插件裡串流跑完 → 寫 `log.md` / `findings.md`；按「開啟對話」才切到原生對話
+- [x] 放下：刪資料夾 + 移出索引（session 保留，只由面板另外封存）
 - [ ] 驗收：連續冒 3 個不相關的念頭 → 三份 context 互不干擾；重開 DSH → 清單還在；主對話沒有被塞進任何東西
 
 ### M2 — 像個工具
