@@ -208,6 +208,16 @@ await check('whim.setRoot 寫入設定檔', async () => {
   assert.equal(json.value.source, 'config')
 })
 
+await check('whim.setRoot 建立還不存在的資料夾', async () => {
+  // 瀏覽器半要在註冊 workspace 之前先讓資料夾存在；workspace registry
+  // 不接受不存在的路徑，所以這一步是「第一筆念頭掛得上 workspace」的前提。
+  const target = join(sandbox, 'auto-created-root')
+  const { json } = await callRoute(handler, { op: 'whim.setRoot', args: { path: target } })
+  assert.equal(json.ok, true)
+  assert.equal(json.value.root, target)
+  assert.equal((await stat(target)).isDirectory(), true)
+})
+
 await check('whim.setRoot 拒絕相對路徑', async () => {
   const { json } = await callRoute(handler, { op: 'whim.setRoot', args: { path: 'relative/path' } })
   assert.equal(json.ok, false)
